@@ -38,6 +38,7 @@ import com.xnx3.wangmarket.admin.entity.TemplateVarData;
 import com.xnx3.wangmarket.admin.service.InputModelService;
 import com.xnx3.wangmarket.admin.service.SiteColumnService;
 import com.xnx3.wangmarket.admin.service.TemplateService;
+import com.xnx3.wangmarket.admin.util.TemplateUtil;
 import com.xnx3.wangmarket.admin.vo.TemplatePageListVO;
 import com.xnx3.wangmarket.admin.vo.TemplatePageVO;
 import com.xnx3.wangmarket.admin.vo.TemplateVO;
@@ -215,8 +216,9 @@ public class TemplateServiceImpl implements TemplateService {
 				}
 			}
 			
-			//将 {templatePath} 标签进行动态替换，将路径还原会标签形态
-			html = html.replaceAll(TemplateCMS.TEMPLATE_PATH, "{templatePath}");
+			//将 {templatePath} 标签进行动态替换，将路径还原回标签形态
+			TemplateCMS templateCMS = new TemplateCMS(site, TemplateUtil.getTemplateByName(site.getTemplateName()));
+			html = html.replaceAll(templateCMS.getTemplatePath()+site.getTemplateName()+"/", "{templatePath}");
 			
 			//如果这个页面中使用了模版变量，保存时，将模版变量去掉，变回模版调用形式{includeid=},卸载变量模版
 			if(html.indexOf("<!--templateVarStart-->") > -1){
@@ -341,7 +343,7 @@ public class TemplateServiceImpl implements TemplateService {
 			return;
 		}
 		Site site = Func.getCurrentSite();
-		TemplateCMS template = new TemplateCMS(site);
+		TemplateCMS template = new TemplateCMS(site, TemplateUtil.getTemplateByName(site.getTemplateName()));
 		String pageHtml = template.assemblyTemplateVar(templateHtml);	//装载模版变量
 		pageHtml = template.replaceSiteColumnTag(pageHtml, siteColumn);	//替换栏目相关标签
 		pageHtml = template.replacePublicTag(pageHtml);		//替换通用标签
@@ -364,7 +366,7 @@ public class TemplateServiceImpl implements TemplateService {
 	}
 
 	public void updateTemplateVarForCache(com.xnx3.wangmarket.admin.entity.TemplateVar templateVar,TemplateVarData templateVarData) {
-		if(Func.getUserBeanForShiroSession().getTemplateVarMapForOriginal() == null){
+		if(Func.getUserBeanForShiroSession().getTemplateVarMapForOriginal() == null || Func.getUserBeanForShiroSession().getTemplateVarCompileDataMap() == null){
 			loadDatabaseTemplateVarToCache();
 		}
 		Func.getUserBeanForShiroSession().getTemplateVarCompileDataMap().put(templateVar.getVarName(), templateVarData.getText());
@@ -699,6 +701,35 @@ public class TemplateServiceImpl implements TemplateService {
 		jo.put("templateName", StringUtil.StringToUtf8(site.getTemplateName()));	//当前模版的名字
 		jo.put("sourceUrl", StringUtil.StringToUtf8(Func.getDomain(site))); 	//模版来源的网站，从那个网站导出来的，可以作为预览网站
 		jo.put("useUtf8Encode", "true");	//设置使用UTF8编码将内容进行转码
+
+		//v4.7增加，从数据库template中取 templateName 这个模版，看是否有
+		com.xnx3.wangmarket.admin.entity.Template template = sqlDAO.findAloneByProperty(com.xnx3.wangmarket.admin.entity.Template.class, "name", site.getTemplateName());
+		if(template != null){
+			JSONObject tempJson = new JSONObject();
+			tempJson.put("addtime", template.getAddtime());	//模版制作时间
+			tempJson.put("companyname", template.getCompanyname() == null ? "":StringUtil.StringToUtf8(template.getCompanyname()));
+			tempJson.put("iscommon", template.getIscommon());
+			tempJson.put("previewUrl", template.getPreviewUrl() == null ? "":StringUtil.StringToUtf8(template.getPreviewUrl()));
+			tempJson.put("remark", StringUtil.StringToUtf8(template.getRemark()));		//模版的备注
+			tempJson.put("siteurl", template.getSiteurl() == null ? "":StringUtil.StringToUtf8(template.getSiteurl()));	//开发者网站url
+			tempJson.put("terminalDisplay", template.getTerminalDisplay());
+			tempJson.put("terminalIpad", template.getTerminalIpad());
+			tempJson.put("terminalMobile", template.getTerminalMobile());
+			tempJson.put("terminalPc", template.getTerminalPc());
+			tempJson.put("type", template.getType());
+			tempJson.put("username", template.getUsername() == null ? "":StringUtil.StringToUtf8(template.getUsername()));	//开发模版的用户的姓名
+			tempJson.put("name", StringUtil.StringToUtf8(template.getName()));
+			tempJson.put("previewPic", StringUtil.StringToUtf8(template.getPreviewPic()));
+			tempJson.put("wscsoDownUrl", StringUtil.StringToUtf8(template.getWscsoDownUrl()));
+			tempJson.put("zipDownUrl", StringUtil.StringToUtf8(template.getZipDownUrl()));
+			
+			//导出的模版所使用的js、css等资源文件的所在。如果没有指定，默认使用的是本地的资源，私有资源，v4.7.1增加
+			//v4.8从新调整，废弃
+			tempJson.put("resourceImport", (template.getResourceImport() != null? template.getResourceImport() : com.xnx3.wangmarket.admin.entity.Template.RESOURCE_IMPORT_PRIVATE));
+			
+			
+			jo.put("template", tempJson);
+		}
 		
 		jo.put("templatePageList", templatePageList);
 		jo.put("templateVarList", templateVarList);
@@ -815,14 +846,34 @@ public class TemplateServiceImpl implements TemplateService {
 		}
 		
 		//更新模版变量缓存
-		getTemplateVarAndDateListByCache();
-		//将模版变量装载入Session。 必须要装载，将模版变量缓存入session，以便后面使用
-		loadDatabaseTemplateVarToCache();
+		reloadTemplateVarCache(request);
 		
-		//v4.6更新，直接在 templateService.importTemplate 中就更新了
-		request.getSession().setAttribute("templatePageListVO", null);
+		//更新模版页面缓存
+		reloadTemplatePageCache(request);
 		
 		return vo;
+	}
+	
+	/**
+	 * 重新加载模版页面的缓存数据
+	 * @param request
+	 */
+	public void reloadTemplatePageCache(HttpServletRequest request){
+		request.getSession().setAttribute(sessionTemplatePageListVO, null);
+		getTemplatePageListByCache(request);
+	}
+	
+	/**
+	 * 重新加载模版变量的缓存数据。
+	 * <br/>包含生成整站时，已替换了通用动态标签的已编译的模版变量
+	 * @param request
+	 */
+	public void reloadTemplateVarCache(HttpServletRequest request){
+		//先清空掉
+		Func.getUserBeanForShiroSession().setTemplateVarMapForOriginal(null);
+		Func.getUserBeanForShiroSession().setTemplateVarCompileDataMap(null);
+		//再加载入缓存
+		getTemplateVarAndDateListByCache();
 	}
 	
 	public List<com.xnx3.wangmarket.admin.entity.TemplateVar> getTemplateVarList(){
@@ -998,4 +1049,28 @@ public class TemplateServiceImpl implements TemplateService {
 		}
 		return new BaseVO();
 	}
+	
+//	
+//	public TemplateVO getTemplateForDatabase(String name){
+//		com.xnx3.wangmarket.admin.entity.Template template = null;
+//		if(name != null){
+//			template = TemplateUtil.databaseTemplateMapForName.get(name);
+//			if(template == null){
+//				template = sqlDAO.findAloneByProperty(com.xnx3.wangmarket.admin.entity.Template.class, "name", name);
+//				if(template != null){
+//					//将其加入map进行缓存
+//					TemplateUtil.databaseTemplateMapForName.put(name, template);
+//				}
+//			}
+//		}
+//		
+//		TemplateVO vo = new TemplateVO();
+//		if(template == null){
+//			vo.setBaseVO(BaseVO.FAILURE, "模版不存在");
+//		}else{
+//			vo.setTemplate(template);
+//		}
+//		return vo;
+//	}
+	
 }

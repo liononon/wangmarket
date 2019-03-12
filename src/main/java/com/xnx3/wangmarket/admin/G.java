@@ -17,7 +17,7 @@ import com.xnx3.wangmarket.admin.entity.Site;
  */
 public class G {
 	//当前的版本号。1.x为通用模版时代； 2.x为cms时代, 3.x 整体架构及云模块使用升级， 4.x整体架构升级，由深度依赖阿里云抽离
-	public static final String VERSION = "4.6";	
+	public static final String VERSION = "4.8";	
 	
 	//云端域名。如，云端模版列表，则为 cloudDomain+"cloudTemplateList.do"
 	public static String cloudDomain = "http://wang.market/";
@@ -74,7 +74,7 @@ public class G {
 	 * <br/>key：list.name
 	 * <br/>value：list.intro
 	 */
-	public static Map<String, String> cloudTemplateMap;
+	//public static Map<String, String> cloudTemplateMap;
 	
 	//webSocket IM的对接url
 //	public static String websocketUrl = "";
@@ -128,24 +128,35 @@ public class G {
 	}
 	
 	
-	private static String  firstAutoAssignDomain;	//下面方法的持久化缓存
+	//private static String  firstAutoAssignDomain;	//下面方法的持久化缓存
 	/**
 	 * 获取主域名，即 AUTO_ASSIGN_DOMAIN 配置的第一个域名
 	 * 例如，Global.get("AUTO_ASSIGN_DOMAIN") 为 ： wang.market,wscso.com
 	 * @return 返回如 wang.market
 	 */
 	public static String getFirstAutoAssignDomain(){
-		if(firstAutoAssignDomain == null){
-			if(Global.get("AUTO_ASSIGN_DOMAIN") != null){
-				if(Global.get("AUTO_ASSIGN_DOMAIN").indexOf(",") > 0){
-					//如果有多个，那么只取第一个
-					String[] s = Global.get("AUTO_ASSIGN_DOMAIN").split(",");
-					firstAutoAssignDomain = s[0];
-				}else{
-					firstAutoAssignDomain = Global.get("AUTO_ASSIGN_DOMAIN");
-				}
+////		if(firstAutoAssignDomain == null){
+//			if(Global.get("AUTO_ASSIGN_DOMAIN") != null){
+//				if(Global.get("AUTO_ASSIGN_DOMAIN").indexOf(",") > 0){
+//					//如果有多个，那么只取第一个
+//					String[] s = Global.get("AUTO_ASSIGN_DOMAIN").split(",");
+//					firstAutoAssignDomain = s[0];
+//				}else{
+//					firstAutoAssignDomain = Global.get("AUTO_ASSIGN_DOMAIN");
+//				}
+//			}
+//		}
+		
+		if(Global.get("AUTO_ASSIGN_DOMAIN") != null){
+			if(Global.get("AUTO_ASSIGN_DOMAIN").indexOf(",") > 0){
+				//如果有多个，那么只取第一个
+				String[] s = Global.get("AUTO_ASSIGN_DOMAIN").split(",");
+				return s[0];
+			}else{
+				return Global.get("AUTO_ASSIGN_DOMAIN");
 			}
 		}
-		return firstAutoAssignDomain;
+		
+		return "请进入总管理后台，系统管理-系统变量下，修改变量名为 AUTO_ASSIGN_DOMAIN 的值";
 	}
 }

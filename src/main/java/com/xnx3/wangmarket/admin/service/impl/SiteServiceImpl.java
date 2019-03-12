@@ -40,6 +40,7 @@ import com.xnx3.wangmarket.admin.service.NewsService;
 import com.xnx3.wangmarket.admin.service.SiteColumnService;
 import com.xnx3.wangmarket.admin.service.SiteService;
 import com.xnx3.wangmarket.admin.service.TemplateService;
+import com.xnx3.wangmarket.admin.util.TemplateUtil;
 import com.xnx3.wangmarket.admin.vo.IndexVO;
 import com.xnx3.wangmarket.admin.vo.SiteColumnTreeVO;
 import com.xnx3.wangmarket.admin.vo.SiteRemainHintVO;
@@ -310,8 +311,12 @@ public class SiteServiceImpl implements SiteService {
 	public BaseVO refreshForTemplate(HttpServletRequest request){
 		BaseVO vo = new BaseVO();
 		Site site = Func.getCurrentSite();
+		if(site == null){
+			vo.setBaseVO(BaseVO.FAILURE, "尚未登陆");
+			return vo;
+		}
 		
-		TemplateCMS template = new TemplateCMS(site);
+		TemplateCMS template = new TemplateCMS(site, TemplateUtil.getTemplateByName(site.getTemplateName()));
 		//取得当前网站所有模版页面
 //		TemplatePageListVO templatePageListVO = templateService.getTemplatePageListByCache(request);
 		//取得当前网站首页模版页面
@@ -355,6 +360,11 @@ public class SiteServiceImpl implements SiteService {
 			columnNewsMap.put(siteColumn.getCodeName(), nList);
 		}
 		
+		//对栏目进行缓存，以栏目id为key，将栏目加入进Map中。用id来取栏目。 同 columnMap. v4.7.1增加
+		Map<Integer, SiteColumn> columnMapForId = new HashMap<Integer, SiteColumn>();
+		for (Map.Entry<String, SiteColumn> entry : columnMap.entrySet()) { 
+			columnMapForId.put(entry.getValue().getId(), entry.getValue());
+		}
 		
 		//对 newsDataList 网站文章的内容进行调整，调整为map key:newsData.id  value:newsData.text
 		Map<Integer, NewsDataBean> newsDataMap = new HashMap<Integer, NewsDataBean>();
@@ -504,7 +514,10 @@ public class SiteServiceImpl implements SiteService {
 			return vo;
 		}
 		
-		//当网站只有一个首页时，是不需要这个的。所以只需要上面的，判断一下是否有模版页就够了。 v2.24更新
+		//v4.7加入，避免没有模版变量时，生成整站报错
+		if(Func.getUserBeanForShiroSession().getTemplateVarMapForOriginal() == null){
+			Func.getUserBeanForShiroSession().setTemplateVarMapForOriginal(new HashMap<String, TemplateVarVO>());
+		}
 		for (Map.Entry<String, TemplateVarVO> entry : Func.getUserBeanForShiroSession().getTemplateVarMapForOriginal().entrySet()) {  
 			//替换公共标签
 			String v = template.replacePublicTag(entry.getValue().getTemplateVarData().getText());
@@ -584,15 +597,14 @@ public class SiteServiceImpl implements SiteService {
 				//当前栏目的列表模版
 				String listTemplateHtml = templateCacheMap.get(siteColumn.getTemplatePageListName());
 				if(listTemplateHtml == null){
-					vo.setBaseVO(BaseVO.FAILURE, "栏目["+siteColumn.getName()+"]未绑定模版列表页面，请去绑定");
+					vo.setBaseVO(BaseVO.FAILURE, "栏目["+siteColumn.getName()+"]未绑定模版列表页面，请去绑定，或删除这个栏目");
 					return vo;
 				}
 				//替换列表模版中的动态栏目调用(动态标签引用)
 				listTemplateHtml = template.replaceSiteColumnBlock(listTemplateHtml, columnNewsMap, columnMap, columnTreeMap, false, siteColumn, newsDataMap);	
 				
-				
 				//生成其列表页面
-				template.generateListHtmlForWholeSite(listTemplateHtml, siteColumn, columnNewsList, newsDataMap);
+				template.generateListHtmlForWholeSite(listTemplateHtml, siteColumn, columnNewsList, newsDataMap, columnMapForId);
 				
 				//XML加入栏目页面
 				xml = xml + getSitemapUrl(indexUrl+"/"+template.generateSiteColumnListPageHtmlName(siteColumn, 1)+".html", "0.4");

@@ -10,14 +10,18 @@
 ## 本项目相关信息
 ||||
 | ------------- |-------------|-------------|
-| 网市场官网 | [www.wang.market](http://www.wang.market) ||
-| 免费模版库 | [wang.market/template.jsp](http://wang.market/template.jsp) | 二十多个模版，持续增加中 |
+| 网市场官网 | [www.wang.market](http://www.leimingyun.com) | 潍坊雷鸣云网络科技有限公司 |
+| 功能插件 | [www.leimingyun.com/plugin.html](https://www.leimingyun.com/plugin.html) | 十多个功能插件，持续增加中 |
+| 云端免费模版库 | [wang.market/template.jsp](http://wang.market/template.jsp) | 二十多个模版，持续增加中 |
 | 升级日志 | [www.wang.market/log.html](http://www.wang.market/log.html) | 最近几年百余次升级日志 |
-| 付费帮助 | [www.wang.market/4446.html](http://www.wang.market/4446.html) | 如果你不懂技术收费提供帮助。 |
-| 合作代理 | [www.wang.market/index.html#join](http://www.wang.market/index.html#join) | 10元即可加盟代理 |
-| 帮助文档 | [help.wscso.com](http://help.wscso.com) |  |
-| 二次开发 | [iw.wscso.com](http://iw.wscso.com) |  |
+| 有偿帮助 | [www.wang.market/pay.html](http://www.wang.market/pay.html) | 技术人员出租1天300元 |
+| 合作代理 | [www.wang.market/price.html](https://www.leimingyun.com/price.html) | 10元即可加盟代理 |
+| 帮助文档 | [help.wscso.com](http://help.wscso.com) | 系统使用的帮助说明，要使用系统必看 |
+| 二次开发 | [iw.wscso.com](http://iw.wscso.com) | 系统二次开发说明 |
 | 模版文档 | [tag.wscso.com](http://tag.wscso.com) | 模版开发说明，及模版标签文档 |
+| 交流社区 | [bbs.wang.market](http://bbs.leimingyun.com) | 有问题到开发论坛发帖求助 |
+<br/>
+
 
 ## 项目极速搭建体验步骤
 1. [点此下载 Windows 64一键运行包](http://www.wang.market/down.html) , 
@@ -53,11 +57,15 @@
 我方（潍坊雷鸣云网络科技有限公司）是阿里云指定合作企业，如果你想使用我们的系统，或将我们系统部署到你自己服务器上使用，请先联系我们（ QQ：921153866、 微信： xnx3com ），我方给你开通一个新的阿里云账户，使用新开通的阿里云账户进行购买服务器。<br/>
  1. 必选，最基础的，购买一台1核2G的服务器。我们给你部署好，你可直接使用！（此种方式使用的是自带的 Sqlite 数据库）大约可建立一千来个网站。注意，此条我方不收任何费用，你只是花费买服务器的钱<br/>
  2. 可选，在 必选1 的基础上，额外购买 Mysql数据库(RDS) + OSS + CDN , 此种方式更适合建站公司、或开通网站比较多的朋友使用。稳定性强，数据完全分离，数据安全有保障！注意，此条我方不收任何费用，你只是多花费买云数据库RDS的钱（大约1000元/年）；至于OSS以及CDN，价格相当低，你可以将之理解为每月的费用是5块钱！<br/>
-3. 可选，购买我们的授权 ， [http://www.wang.market/5541.html](http://www.wang.market/5541.html) 500元/年，或者5000元永久，系统中去掉我方的版权标记。当前版权标记的位置：
+3. 可选，购买我们的授权 ， [http://www.wang.market/price.html](http://www.wang.market/price.html) 500元/年，或者5000元永久，系统中去掉我方的版权标记。当前版权标记的位置：
   - 1. 总管理后台左下角
   - 2. 代理后台中左下角
   - 3. 网站管理后台左下角缩小侧边栏功能中，鼠标放上会出现我方标记
   - 4. 网站管理后台登陆后的欢迎页面中，最底部的灰色小字
+
+## 共创模版市场
+我们期待您将所做的模版分享出来，共创云端模版库！而且，您可以在模版中稍微放入您的一些信息以及广告。比如，模版中的友情链接，默认放上您想放的几个友情链接，又比如，最底部的技术支持，默认放上贵公司的名字及链接等。<br/>
+有意向的朋友欢迎联系我！ 我微信 xnx3com
 
 
 ## 二次开发<br/>
@@ -75,25 +83,18 @@ Eclipse、MyEclipse <br/>
 ## 优秀合作项目推荐
 | 项目 | 码云地址 | 简介 |
 | ------------- |-------------|-------------|
+| xnx3 | [gitee.com/xnx3/xnx3](https://gitee.com/xnx3/xnx3) | Java常用工具类 |
 | Coody Framework | [gitee.com/coodyer/coody-icop](https://gitee.com/coodyer/coody-icop) | 国产分布式IOC框架、已实现IOC、AOP、定时任务、切面缓存、<br/>MVC、事务管理 |
 
 
 
 ## 云端模版库<br/>
 你的时间是非常宝贵的！不会让你一接触就要自己去学习做模版。
-我们附带有 [云端模版库，点此查看](http://wang.market/template.jsp)<br/>
+我们附带有 [云端模版库，点此查看](http://wang.market/template.do)<br/>
 虽然模版不多只有不到20套，但却是可以在创建网站后一键导入，直接拿过来使用！一键导入之后，会自动创建栏目、页面。你只需要改一下栏目名字、改改文字、图片，就可以达到成本网站交付标准！作为初期的你，足够用此来来服务客户、及熟悉整个系统！另外我们的模版库的模版会持续增加。<br/>
 [所见网站，皆可为我所用－无限模版计划](https://github.com/xnx3/templatespider)
 
 <br/>
-
-
-## 第三方功能插件<br/>
-
-| 作者 | 链接 | 简介 |
-| ------------- |-------------|-------------|
-| 鬼画符 | [gitee.com/mail_osc/wangmarket_plugin_bbs](https://gitee.com/mail_osc/wangmarket_plugin_bbs) | 论坛插件。让每个网站都有一个自己的、独立的论坛。|
-| 鬼画符 | [gitee.com/mail_osc/wangmarket_plugin_bbs](https://gitee.com/mail_osc/wangmarket_plugin_innerDown) | 企业内部文件共享插件。企业内部员工的附件共享系统 |
 
 
 ## 第三方模版<br/>
@@ -140,7 +141,7 @@ wangmarket                          GitHub目录
 ├─src                               项目源代码 ( Maven )
 ├─pom.xml                           项目源代码 pom ( Maven )
 ├─else                              其他的杂七杂八相关文件，一般用不到
-│  ├─wangmarket.sql                 项目运行所需要的数据库文件( Mysql数据库，默认sqlite3，一般用不到)
+│  ├─wangmarket.sql                 项目运行所需要的数据库文件( Mysql数据库，默认sqlite3)
 │  ├─upgradeLog                     自项目上线运营后～开源之前，升级日志
 │  ├─pc_wap_tag                     手机、电脑模式网站模版所使用的动态标签
 │  └─instructions.md                其他项目配置说明，如邮件发送、日志系统等
@@ -155,12 +156,14 @@ v4.0 版本以后，使用 Spring Boot2 框架，以及采用 Maven 进行管理
 
 
 ## 交流、反馈<br/>
+交流论坛：[bbs.wang.market](http://bbs.wang.market) 【建议有问题到开发论坛发帖求助，我们会每天不定时巡视，回答求助信息。求助必回】<br/>
+交流QQ群：472328584<br/>
+
 开发者姓名：管雷鸣<br/>
 开发者QQ：921153866<br/>
 开发者微信：xnx3com<br/>
 开发者微信公众号：wangmarket<br/>
-交流QQ群：472328584<br/>
-官方网站：[www.wang.market](http://www.wang.market)<br/>
+官方网站：[www.wang.market](http://www.leimingyun.com)<br/>
 GitHub：[github.com/xnx3/wangmarket](https://github.com/xnx3/wangmarket)<br/>
 开源中国：[gitee.com/mail_osc/wangmarket](https://gitee.com/mail_osc/wangmarket)<br/>
 <br/>
@@ -178,7 +181,7 @@ GitHub：[github.com/xnx3/wangmarket](https://github.com/xnx3/wangmarket)<br/>
 ## 版权声明<br/>
 著作权登记号：2017SR608214<br/>
 本软件使用 Apache License 2.0 协议。您可以随意修改、发布，或用于商业领域。但首页底部需显式保留我们“网市场”版权标示及我们官方首页的链接！<br/>
-[网市场云建站系统软件商业授权说明（不授权也完全可以免费使用！）](http://www.wang.market/5541.html)
+[网市场云建站系统软件商业授权说明（不授权也完全可以免费使用！）](http://www.wang.market/price.html)
 <br/>
 <br/>
 项目由个人历经数年，凭借每晚四小时开发而来。一个人的兴趣、执念、或者信仰，所发挥出的光芒，可能会照亮一个行业

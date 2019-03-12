@@ -23,7 +23,7 @@ import com.xnx3.j2ee.service.SqlService;
 import com.xnx3.net.OSSUtil;
 
 /**
- * 版本相关
+ * 系统启动初始化
  * @author 管雷鸣
  */
 @Component
@@ -58,6 +58,7 @@ public class InitApplication implements CommandLineRunner{
 		AttachmentFile.mode = Global.get("ATTACHMENT_FILE_MODE");
 		if(AttachmentFile.mode == null){
 			AttachmentFile.mode = AttachmentFile.MODE_LOCAL_FILE;
+			Log.info("AttachmentFile.mode = "+AttachmentFile.mode);
 		}
 		
 		//如果使用的是阿里云OSS，进行OSS初始化赋值。

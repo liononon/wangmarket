@@ -6,10 +6,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>  
 <%@ taglib uri="http://www.xnx3.com/java_xnx3/xnx3_tld" prefix="x" %>
-<%
-String path = request.getContextPath();
-String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
-%>
 <jsp:include page="../iw/common/head.jsp">
 	<jsp:param name="title" value="欢迎使用"/>
 </jsp:include>
@@ -115,13 +111,13 @@ try{
 	<button onclick="parent.openTemplatePageList('');" class="layui-btn layui-btn-primary">模版页面列表</button>
 </div>
 
-<!-- 未授权用户，请尊重作者劳动成果，保留我方版权标示及链接！授权参见：http://www.wang.market/5541.html -->
+<!-- 未授权用户，请尊重作者劳动成果，保留我方版权标示及链接！授权参见：http://www.wang.market/price.html -->
 <% if(G.copyright){ 
 		Date d = new Date();
 		SimpleDateFormat df = new SimpleDateFormat("yyyy");
 		String nowYear = df.format(d);
 %>
-<div style="position: absolute;bottom: 10px;color: gray;font-size: 14px;text-align: center;width: 100%;">Copyright © 2016-<%=nowYear %> <a href="http://www.wang.market" target="_black">网市场云建站系统</a>. 潍坊雷鸣云网络科技有限公司 版权所有</div>
+<div style="position: fixed;bottom: 5px;color: gray;font-size: 12px;text-align: center;width: 100%;">Copyright © 2016-<%=nowYear %> <a href="http://www.wang.market" style="color: gray;" target="_black">网市场云建站系统</a></div>
 <% } %>
 
 

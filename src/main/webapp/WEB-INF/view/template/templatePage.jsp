@@ -1,15 +1,11 @@
 <%@page import="com.xnx3.j2ee.Global"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@page import="com.xnx3.wangmarket.admin.G"%>
-<%
-String path = request.getContextPath();
-String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
-%>
 <jsp:include page="../iw/common/head.jsp">
 	<jsp:param name="title" value="编辑模版页面"/>
 </jsp:include>
-<script src="<%=basePath+Global.CACHE_FILE %>TemplatePage_type.js"></script>
-<script src="<%=basePath+Global.CACHE_FILE %>TemplatePage_editMode.js"></script>
+<script src="/<%=Global.CACHE_FILE %>TemplatePage_type.js"></script>
+<script src="/<%=Global.CACHE_FILE %>TemplatePage_editMode.js"></script>
 
 <form id="form" method="post" class="layui-form" style="padding:20px; padding-top:35px; margin-bottom: 0px; padding-bottom:0px;">
 	<input type="hidden" name="id" value="${templatePage.id}" />
@@ -88,7 +84,7 @@ layui.use(['form', 'layedit', 'laydate'], function(){
   form.on('submit(demo1)', function(data){
 		parent.iw.loading('保存中');
 		var d=$("form").serialize();
-        $.post("<%=basePath %>template/saveTemplatePage.do", d, function (result) { 
+        $.post("/template/saveTemplatePage.do", d, function (result) { 
         	parent.iw.loadClose();
         	var obj = JSON.parse(result);
         	if(obj.result == '1'){
@@ -126,7 +122,7 @@ $(function(){
 	//名字
 	var label_name_index = 0;
 	$("#label_name").hover(function(){
-		label_name_index = layer.tips('<ol style="list-style-type:demical"><li style="list-style-position:outside;">模版页面的名字，建议用英文、数字、"_" 来命名，强烈不建议用汉字。</li><li style="list-style-position:outside;"><b>添加后最好不要对其进行修改了！</b>栏目绑定的模版、备份还原模版页时，都是依据此处进行操作。</li></ol>', '#label_name', {
+		label_name_index = layer.tips('<ol style="list-style-type:demical"><li style="list-style-position:outside;">模版页面的名字，请用用英文、数字、"_" 来命名！</li><li style="list-style-position:outside;"><b>添加后最好不要对其进行修改了！</b>栏目绑定的模版、备份还原模版页时，都是依据此处进行操作。</li></ol>', '#label_name', {
 			tips: [2, '#0FA6A8'], //还可配置颜色
 			time:0,
 			tipsMore: true,

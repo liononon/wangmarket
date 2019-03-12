@@ -1,6 +1,7 @@
 package com.xnx3.wangmarket.admin.controller;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,13 +11,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import net.sf.json.JSONObject;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,13 +22,16 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
-
 import com.xnx3.DateUtil;
+import com.xnx3.Lang;
 import com.xnx3.MD5Util;
 import com.xnx3.StringUtil;
+import com.xnx3.ZipUtil;
+import com.xnx3.file.FileUtil;
 import com.xnx3.j2ee.Global;
 import com.xnx3.j2ee.entity.User;
 import com.xnx3.j2ee.func.AttachmentFile;
+import com.xnx3.j2ee.func.Log;
 import com.xnx3.j2ee.service.SqlService;
 import com.xnx3.j2ee.util.Page;
 import com.xnx3.j2ee.util.Sql;
@@ -51,6 +52,7 @@ import com.xnx3.wangmarket.admin.entity.TemplatePage;
 import com.xnx3.wangmarket.admin.entity.TemplatePageData;
 import com.xnx3.wangmarket.admin.entity.TemplateVar;
 import com.xnx3.wangmarket.admin.entity.TemplateVarData;
+import com.xnx3.wangmarket.admin.init.TemplateTemporaryFolder;
 import com.xnx3.wangmarket.admin.pluginManage.PluginManage;
 import com.xnx3.wangmarket.admin.pluginManage.SitePluginBean;
 import com.xnx3.wangmarket.admin.service.InputModelService;
@@ -58,8 +60,11 @@ import com.xnx3.wangmarket.admin.service.SiteColumnService;
 import com.xnx3.wangmarket.admin.service.SiteService;
 import com.xnx3.wangmarket.admin.service.TemplateService;
 import com.xnx3.wangmarket.admin.util.AliyunLog;
+import com.xnx3.wangmarket.admin.util.TemplateUtil;
+import com.xnx3.wangmarket.admin.util.interfaces.TemplateUtilFileMove;
 import com.xnx3.wangmarket.admin.vo.RestoreTemplateSubmitCheckDataVO;
 import com.xnx3.wangmarket.admin.vo.TemplateCompareVO;
+import com.xnx3.wangmarket.admin.vo.TemplateListVO;
 import com.xnx3.wangmarket.admin.vo.TemplatePageListVO;
 import com.xnx3.wangmarket.admin.vo.TemplatePageVO;
 import com.xnx3.wangmarket.admin.vo.TemplateVO;
@@ -106,7 +111,6 @@ public class TemplateController extends BaseController {
 		
 		AliyunLog.addActionLog(getSiteId(), "进入CMS模式网站后台首页-iframe main");
 		
-		
 		//获取网站后台管理系统有哪些功能插件，也一块列出来,以直接在网站后台中显示出来
 		String pluginMenu = "";
 		if(PluginManage.cmsSiteClassManage.size() > 0){
@@ -127,7 +131,7 @@ public class TemplateController extends BaseController {
 		model.addAttribute("parentAgency", getParentAgency());	//上级代理
 		model.addAttribute("user", user);
 		model.addAttribute("im_kefu_websocketUrl", com.xnx3.wangmarket.im.Global.websocketUrl);
-		model.addAttribute("autoAssignDomain", com.xnx3.wangmarket.domain.G.getAutoAssignMainDomain());	//自动分配的域名，如 wang.market
+		model.addAttribute("autoAssignDomain", G.getFirstAutoAssignDomain());	//自动分配的域名，如 wang.market
 		model.addAttribute("SITEUSER_FIRST_USE_EXPLAIN_URL", Global.get("SITEUSER_FIRST_USE_EXPLAIN_URL"));
 		return "template/index";
 	}
@@ -513,6 +517,7 @@ public class TemplateController extends BaseController {
 	public String getTemplatePageText(Model model,HttpServletRequest request,
 			@RequestParam(value = "pageName", required = true) String pageName
 			) throws IOException{
+		Site site = getSite();
 		String html = null;
 		pageName = filter(pageName);
 		
@@ -548,15 +553,16 @@ public class TemplateController extends BaseController {
 				templateService.getTemplateVarAndDateListByCache();
 			}
 			
-			com.xnx3.wangmarket.admin.cache.TemplateCMS temp = new com.xnx3.wangmarket.admin.cache.TemplateCMS(getSite(), true);
+			com.xnx3.wangmarket.admin.cache.TemplateCMS temp = new com.xnx3.wangmarket.admin.cache.TemplateCMS(site, true);
 			html = temp.assemblyTemplateVar(vo.getTemplatePageData().getText());
 			
 			// {templatePath} 替换
-			html = html.replaceAll(TemplateCMS.regex("templatePath"), TemplateCMS.TEMPLATE_PATH);
+			TemplateCMS templateCMS = new TemplateCMS(site, TemplateUtil.getTemplateByName(site.getTemplateName()));
+			html = html.replaceAll(TemplateCMS.regex("templatePath"), templateCMS.getTemplatePath());
 			
 			//自动在</head>之前，加入htmledit.js
-			String yuming = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+request.getContextPath()+"/";
-			html = html.replace("</head>", "<!--XNX3HTMLEDIT--><script>var masterSiteUrl='"+Global.get("MASTER_SITE_URL")+"'; var htmledit_upload_url='"+yuming+"template/uploadImage.do?t="+DateUtil.timeForUnix13()+"'; </script><script src=\"http://res.weiunity.com/htmledit/htmledit.js\"></script></head>");
+			String yuming = "//"+request.getServerName()+":"+request.getServerPort()+request.getContextPath()+"/";
+			html = html.replace("</head>", "<!--XNX3HTMLEDIT--><script>var masterSiteUrl='"+Global.get("MASTER_SITE_URL")+"'; var htmledit_upload_url='"+yuming+"template/uploadImage.do?t="+DateUtil.timeForUnix13()+"'; </script><script src=\"//res.weiunity.com/htmledit/htmledit.js\"></script></head>");
 			
 			AliyunLog.addActionLog(vo.getTemplatePageData().getId(), "可视化编辑获取指定模版页内容", pageName);
 		}
@@ -707,43 +713,116 @@ public class TemplateController extends BaseController {
 	@RequestMapping(value="uploadImportTemplate${url.suffix}", method = RequestMethod.POST)
 	@ResponseBody
 	public void uploadImportTemplate(HttpServletResponse response, HttpServletRequest request, 
-			@RequestParam("templateFile") MultipartFile multipartFile) throws IOException{
-		JSONObject json = new JSONObject();
+			@RequestParam("templateFile") MultipartFile multipartFile){
 		if(multipartFile == null){
-			json.put("result", BaseVO.FAILURE);
-			json.put("info", "请选择要导入的模版");
-		}else{
-			String templateText = StringUtil.inputStreamToString(multipartFile.getInputStream(), "UTF-8");
-			BaseVO vo = templateService.importTemplate(templateText, true, request);
-			json.put("result", vo.getResult());
-			json.put("info", vo.getInfo());
+			responseJson(response, BaseVO.FAILURE, "请选择要导入的模版");
+			return;
+		}
+		
+		String wscsoTemplateText = null;	//wscso后缀的模版文件
+		
+		//判断导入的模版文件格式，是wscso还是zip格式
+		
+		//判断一下上传文件大小
+		int lengthKB = 0;
+		try {
+			lengthKB = (int) Math.ceil(multipartFile.getInputStream().available()/1024);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			responseJson(response, BaseVO.FAILURE, "未获取到所导入的文件大小");
+			return;
+		}
+		
+		//获取上传的文件的后缀
+		String fileSuffix = Lang.findFileSuffix(multipartFile.getOriginalFilename()).toLowerCase();
+		if(fileSuffix.equals("wscso")){
+			//wscso的限制在配置文件applilcation.properties的大小以内
+			if(lengthKB > AttachmentFile.getMaxFileSizeKB()){
+				//超过
+				responseJson(response, BaseVO.FAILURE, "纯模版文件最大限制"+AttachmentFile.getMaxFileSizeKB()+"KB以内");
+				return;
+			}
+			try {
+				wscsoTemplateText = StringUtil.inputStreamToString(multipartFile.getInputStream(), "UTF-8");
+			} catch (IOException e) {
+				Log.error("获取到的，导入模版没有内容");
+				e.printStackTrace();
+				responseJson(response, BaseVO.FAILURE, "所获取到所导入的模版未发现模版内容");
+				return;
+			}
+		}else if (fileSuffix.equals("zip")) {
+			//上传的是模版文件，包含素材，将其上传到服务器本地 ， v4.7 增加
+			//zip的限制在50MB以内
+			if(lengthKB > 50*1025){
+				//超过50MB
+				responseJson(response, BaseVO.FAILURE, "最大限制50MB以内");
+				return;
+			}
 			
-			if(vo.getResult() - BaseVO.SUCCESS == 0){
-				//导入完毕后，还要刷新当前的模版页面、模版变量缓存。这里清空缓存，下次使用时从新从数据库加载最新的
-				//v4.4更新，直接在 templateService.importTemplate 中就更新了
-				request.getSession().setAttribute("templatePageListVO", null);
-//				Func.getUserBeanForShiroSession().setTemplateVarCompileDataMap(null);
-//				Func.getUserBeanForShiroSession().setTemplateVarMapForOriginal(null);
-				
-				AliyunLog.addActionLog(getSiteId(), "本地导入模版文件成功！");
+			String fileName = DateUtil.timeForUnix13()+"_"+StringUtil.getRandom09AZ(20);
+			File file = new File(TemplateTemporaryFolder.folderPath+fileName+".zip");
+			try {
+				multipartFile.transferTo(file);
+			} catch (IllegalStateException | IOException e1) {
+				e1.printStackTrace();
+				responseJson(response, BaseVO.FAILURE, e1.getMessage());
+				return;
+			}
+			
+			//将其解压到同文件夹中
+			try {
+				ZipUtil.unzip(TemplateTemporaryFolder.folderPath+fileName+".zip",TemplateTemporaryFolder.folderPath+fileName+"/");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			//既然已经解压出来了，那么删除掉zip文件
+			file.delete();
+			//判断一下解压出来的文件中，是否存在 template.wscso 这个模版文件
+			File wscsoFile = new File(TemplateTemporaryFolder.folderPath+fileName+"/template.wscso");
+			if(wscsoFile.exists()){
+				wscsoTemplateText = FileUtil.read(wscsoFile, FileUtil.UTF8);
 			}else{
-				AliyunLog.addActionLog(getSiteId(), "本地导入模版文件失败！");
+				//不存在，那就报错吧
+				responseJson(response, BaseVO.FAILURE, "template.wscso模版文件未发现！");
+				return;
+			}
+				
+			TemplateVO tvo = new TemplateVO();
+			//导入JSON，生成对象
+			tvo.importText(FileUtil.read(TemplateTemporaryFolder.folderPath+fileName+"/template.wscso", FileUtil.UTF8));
+			//v4.7版本以后，导出的都会有 tvo.template 对象
+			String templateName = tvo.getTemplate().getName();
+			//判断数据库中，是否已经有这个模版了
+			com.xnx3.wangmarket.admin.entity.Template template = sqlService.findAloneByProperty(com.xnx3.wangmarket.admin.entity.Template.class, "name", templateName);
+			if(template == null){
+				//为空，没有这个模版，这个是正常的，可以将模版资源文件导入
+				//将zip解压出来的文件，进行过滤，过滤掉不合法的后缀文件，将合法的文件后缀转移到新建立的模版文件夹中去
+				new TemplateUtil(templateName, new TemplateUtilFileMove() {
+					public void move(String path, InputStream inputStream) {
+						AttachmentFile.put(path, inputStream);
+					}
+				}).filterTemplateFile(new File(TemplateTemporaryFolder.folderPath+fileName+"/"));
+				//将这个模版模版信息记录入数据库
+				template = tvo.getTemplate();
+				template.setIscommon(com.xnx3.wangmarket.admin.entity.Template.ISCOMMON_NO); 	//用户自己导入的，默认是私有的，不加入公共模版库。除非通过模版中心来指定（模版中心属于授权版本）
+				template.setUserid(getUserId());
+				sqlService.save(template);
+				
+			}else{
+				//不为空，已经有这个模版了，那么就不可以导入资源文件，只导入 wscso 文件就可以了
+				System.out.println("已经有这个模版的资源文件了，忽略:"+template.getName());
 			}
 		}
 		
-		response.setCharacterEncoding("UTF-8");  
-	    response.setContentType("application/json; charset=utf-8");  
-	    PrintWriter out = null;  
-	    try { 
-	        out = response.getWriter();  
-	        out.append(json.toString());
-	    } catch (IOException e) {  
-	        e.printStackTrace();  
-	    } finally {  
-	        if (out != null) {  
-	            out.close();  
-	        }
-	    }  
+		//将 wscso 模版文件导入
+		BaseVO vo = templateService.importTemplate(wscsoTemplateText, true, request);
+		if(vo.getResult() - BaseVO.SUCCESS == 0){
+			AliyunLog.addActionLog(getSiteId(), "本地导入模版文件成功！");
+		}else{
+			AliyunLog.addActionLog(getSiteId(), "本地导入模版文件失败！");
+		}
+		
+		responseJson(response, vo.getResult(), vo.getInfo());
 	}
 	
 	/**
@@ -756,18 +835,22 @@ public class TemplateController extends BaseController {
 			@RequestParam(value = "templateName", required = false , defaultValue="") String templateName){
 		templateName = filter(templateName);
 		if(templateName.length() == 0){
-			return error("请选择要远程获取的模版");
+			return error("请选择模版");
 		}
 		
-		HttpUtil http = new HttpUtil(HttpUtil.UTF8);
-		HttpResponse hr = http.get(G.RES_CDN_DOMAIN+"template/"+templateName+"/template.wscso");
-		if(hr.getCode() - 404 == 0){
+		com.xnx3.wangmarket.admin.entity.Template template = TemplateUtil.getTemplateByName(templateName);
+		if(template == null){
 			return error("模版不存在");
 		}
 		
-		BaseVO vo = templateService.importTemplate(hr.getContent(), true, request);
+		BaseVO wscvo = TemplateUtil.getTemplateWscso(template);
+		if(wscvo.getResult() - BaseVO.FAILURE == 0){
+			return wscvo;
+		}
+		
+		BaseVO vo = templateService.importTemplate(wscvo.getInfo(), true, request);
 		if(vo.getResult() - BaseVO.SUCCESS == 0){
-			AliyunLog.addActionLog(getSiteId(), "云端导入模版文件成功！");
+			AliyunLog.addActionLog(getSiteId(), "模版导入成功！");
 		}
 		return vo;
 	}
@@ -785,6 +868,10 @@ public class TemplateController extends BaseController {
 			return redirect("template/restoreTemplate.do");
 		}else{
 			//若没有模版，才会出现选择模版的界面
+
+			//最大上传大小，单位 KB
+			model.addAttribute("maxFileSizeKB", AttachmentFile.getMaxFileSizeKB());
+			model.addAttribute("AttachmentFileUrl", AttachmentFile.netUrl());
 			return "template/selectTemplate";
 		}
 	}
@@ -834,15 +921,18 @@ public class TemplateController extends BaseController {
 	 */
 	@RequestMapping("restoreTemplate${url.suffix}")
 	public String restoreTemplate(Model model,HttpServletRequest request){
-		AliyunLog.addActionLog(getSiteId(), "打开还原模板选择页面");
+		Site site = getSite();
+		AliyunLog.addActionLog(site.getId(), "打开还原模板选择页面");
 		
 		//判断当前用户的模板是使用的云端的，还是本地导入的
 		boolean usedYunTemplate = false;	//若是云端模板，则为true
-		Site site = getSite();
+		
 		if(site.getTemplateName() != null && site.getTemplateName().length() > 0){
-			//判断当前网站使用的模板是否在云端模板库中（是否是云端模板）
-			if(G.cloudTemplateMap.get(site.getTemplateName()) != null){
+			//取出模版库（云端+本地）的模版
+			com.xnx3.wangmarket.admin.entity.Template template = TemplateUtil.getTemplateByName(site.getTemplateName());
+			if(template != null && template.getWscsoDownUrl() != null && template.getWscsoDownUrl().indexOf("//") > -1){
 				usedYunTemplate = true;
+				model.addAttribute("template", template);
 			}
 		}
 		
@@ -919,14 +1009,19 @@ public class TemplateController extends BaseController {
 			return error("当前网站未使用云端模板！云端还原失败");
 		}
 		
-		HttpUtil http = new HttpUtil(HttpUtil.UTF8);
-		HttpResponse hr = http.get(G.RES_CDN_DOMAIN+"template/"+site.getTemplateName()+"/template.wscso");
-		if(hr.getCode() - 404 == 0){
-			return error("云端模版不存在");
+		com.xnx3.wangmarket.admin.entity.Template template = TemplateUtil.getTemplateByName(site.getTemplateName());
+		if(template == null){
+			//并非云端模版
+			return error("模版不存在");
+		}
+		BaseVO tvo = TemplateUtil.getTemplateWscso(template);
+		if(tvo.getResult() - BaseVO.FAILURE == 0){
+			//出错，直接返回
+			return tvo;
 		}
 		
 		TemplateVO templateVO = new TemplateVO();
-		templateVO.importText(hr.getContent());
+		templateVO.importText(tvo.getInfo());
 		tcv = restoreTemplateCompare(request, templateVO);
 		if(tcv.getResult() - TemplateCompareVO.FAILURE == 0){
 			return error(tcv.getInfo());
@@ -1552,5 +1647,28 @@ public class TemplateController extends BaseController {
 		
 		return success();
 	}
+	
+
+	/**
+	 * 获取可用模版列表接口
+	 */
+	@RequestMapping(value="getTemplateList${url.suffix}")
+	@ResponseBody
+	public TemplateListVO getTemplateList(HttpServletRequest request, Model model, 
+			@RequestParam(value = "type", required = false, defaultValue="-1") int type){
+		Map<String, com.xnx3.wangmarket.admin.entity.Template> map = TemplateUtil.getTemplateList(type);
+		List<com.xnx3.wangmarket.admin.entity.Template> list = new ArrayList<com.xnx3.wangmarket.admin.entity.Template>();
+		
+		for (Map.Entry<String, com.xnx3.wangmarket.admin.entity.Template> entry : map.entrySet()) {
+			list.add(entry.getValue());
+		}
+		
+		
+		TemplateListVO vo = new TemplateListVO();
+		vo.setList(list);
+		vo.setResult(BaseVO.SUCCESS);
+		return vo;
+	}
+	
 	
 }

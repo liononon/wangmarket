@@ -1,10 +1,8 @@
 <%@page import="com.xnx3.DateUtil"%>
 <%@page import="com.xnx3.j2ee.Global"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %><%
-String path = request.getContextPath();
-String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
-%><%@page import="com.xnx3.wangmarket.admin.G"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@page import="com.xnx3.wangmarket.admin.G"%>
 <jsp:include page="../iw/common/head.jsp">
 	<jsp:param name="title" value="手机模式网站管理后台"/>
 </jsp:include>
@@ -14,11 +12,11 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <script src="http://res.weiunity.com/js/fun.js"></script>
 
 <script>
-var masterSiteUrl = '<%=basePath %>';
+var masterSiteUrl = '//<%=request.getServerName() %>/';
 var autoAssignDomain = '${autoAssignDomain }';
 </script>
-<script src="<%=basePath %>js/admin/commonedit.js?v=<%=G.VERSION %>"></script>
-<script src="<%=basePath %>js/admin/indexedit.js"></script>
+<script src="/js/admin/commonedit.js?v=<%=G.VERSION %>"></script>
+<script src="/js/admin/indexedit.js"></script>
 <style>
 #editPanel{
 	position: absolute;
@@ -129,7 +127,7 @@ var autoAssignDomain = '${autoAssignDomain }';
  -->
  
 		<li class="layui-nav-item" id="wapgenghuanmoban">
-			<a href="javascript:loadIframeByUrl('<%=basePath %>site/templateList.do?client=wap')">
+			<a href="javascript:loadIframeByUrl('/site/templateList.do?client=wap')">
 				<i class="layui-icon firstMenuIcon">&#xe61b;</i>
 				<span class="firstMenuFont">更换模版</span>
 			</a>
@@ -142,9 +140,9 @@ var autoAssignDomain = '${autoAssignDomain }';
 				<span class="firstMenuFont">日志访问</span>
 			</a>
 			<dl class="layui-nav-child">
-				<dd><a id="rzfw_fangwentongji" class="subMenuItem" href="javascript:loadIframeByUrl('<%=basePath %>requestLog/fangwentongji.do');">访问统计</a></dd>
-				<dd><a id="rzfw_pachongtongji" class="subMenuItem" href="javascript:loadIframeByUrl('<%=basePath %>requestLog/pachongtongji.do');">爬虫统计</a></dd>
-				<dd><a id="rzfw_caozuorizhi" class="subMenuItem" href="javascript:loadIframeByUrl('<%=basePath %>requestLog/actionLogList.do');">操作日志</a></dd>
+				<dd><a id="rzfw_fangwentongji" class="subMenuItem" href="javascript:loadIframeByUrl('/requestLog/fangwentongji.do');">访问统计</a></dd>
+				<dd><a id="rzfw_pachongtongji" class="subMenuItem" href="javascript:loadIframeByUrl('/requestLog/pachongtongji.do');">爬虫统计</a></dd>
+				<dd><a id="rzfw_caozuorizhi" class="subMenuItem" href="javascript:loadIframeByUrl('/requestLog/actionLogList.do');">操作日志</a></dd>
 			</dl>
 		</li>
 		<% } %>
@@ -156,7 +154,7 @@ var autoAssignDomain = '${autoAssignDomain }';
 			</a>
 			<dl class="layui-nav-child">
 				<dd><a id="im_menu" class="subMenuItem" href="javascript:openKefuSet();">基本设置</a></dd>
-				<dd><a id="im_hostory" class="subMenuItem" href="javascript:loadIframeByUrl('<%=basePath %>im/hostoryChatList.do'), notUseTopTools();">历史咨询</a></dd>
+				<dd><a id="im_hostory" class="subMenuItem" href="javascript:loadIframeByUrl('/im/hostoryChatList.do'), notUseTopTools();">历史咨询</a></dd>
 			</dl>
 		</li>
 		<% } %>
@@ -177,14 +175,14 @@ var autoAssignDomain = '${autoAssignDomain }';
 		</script>
 		
 		<li class="layui-nav-item">
-			<a id="neirongguanli" href="javascript:loadIframeByUrl('<%=basePath %>news/listForTemplate.do');">
+			<a id="neirongguanli" href="javascript:loadIframeByUrl('/news/listForTemplate.do');">
 				<i class="layui-icon firstMenuIcon">&#xe60a;</i>
 				<span class="firstMenuFont">内容管理</span>
 			</a>
 		</li>
 		
 		<li class="layui-nav-item">
-			<a id="chakanwangzhan" href="<%=basePath %>index.html?domain=${site.domain }.<%=com.xnx3.wangmarket.admin.G.getFirstAutoAssignDomain() %>" target="_black">
+			<a id="chakanwangzhan" href="/index.html?domain=${site.domain }.<%=com.xnx3.wangmarket.admin.G.getFirstAutoAssignDomain() %>" target="_black">
 				<i class="layui-icon firstMenuIcon">&#xe615;</i>
 				<span class="firstMenuFont">预览网站</span>
 			</a>
@@ -203,7 +201,7 @@ var autoAssignDomain = '${autoAssignDomain }';
 		</li>
 		
 		<li class="layui-nav-item" style="position: absolute;bottom: 0px;">
-			<a id="tuichudenglu" href="<%=basePath %>user/logout.do">
+			<a id="tuichudenglu" href="/user/logout.do">
 				<i class="layui-icon firstMenuIcon">&#xe633;</i>
 				<span class="firstMenuFont">退出登陆</span>
 			</a>
@@ -373,7 +371,7 @@ function openIndexRefreshCache(){
 
 //打开首页
 function openIndex(){
-	loadIframeByUrl('<%=basePath %>siteWap/editIndex.do');
+	loadIframeByUrl('/siteWap/editIndex.do');
 	//调整iframe的宽度
 	document.getElementById('iframe').style.width = document.getElementById('iframe').offsetHeight/1.618+'px';
 }
@@ -396,7 +394,7 @@ var username = "${user.nickname }";	//用户昵称，用户在聊天框显示的
 var sign = '${siteUrl},${site.name}';	//当前用户签名
 var socketUrl = '${im_kefu_websocketUrl}'; //socket的url请求地址
 </script>
-<script src="<%=basePath %>js/im/site.js"></script>
+<script src="/js/im/site.js"></script>
 <!-- IM end -->
 <% } %>
 

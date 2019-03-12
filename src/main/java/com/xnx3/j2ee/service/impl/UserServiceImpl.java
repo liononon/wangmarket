@@ -402,7 +402,7 @@ public class UserServiceImpl implements UserService{
 		parameterMap.put("used", used);
 		parameterMap.put("type", type);
 		parameterMap.put("code", code);
-		List<SmsLog> list = sqlDAO.findByHql("from SmsLog as model where model.phone= :phone and model.addtime > :addtime and model.used = :used and model.type = :type and model.code = :code", parameterMap);
+		List<SmsLog> list = sqlDAO.findByHql("from SmsLog as model where model.phone= :phone and model.addtime > :addtime and model.used = :used and model.type = :type and model.code = :code", parameterMap, 0);
 		if(list.size() > 0){
 			return list.get(0);
 		}
@@ -577,7 +577,7 @@ public class UserServiceImpl implements UserService{
 
 	public BaseVO updateNickname(HttpServletRequest request) {
 		BaseVO baseVO = new BaseVO();
-		String nickname = Safety.filter(request.getParameter("nickname"));
+		String nickname = StringUtil.filterXss(request.getParameter("nickname"));
 		if(nickname == null){
 			nickname = "";
 		}
@@ -882,14 +882,17 @@ public class UserServiceImpl implements UserService{
 			head = defaultHead;
 		}else{
 			if(user.getHead() != null && user.getHead().length() > 10){
-				if(user.getHead().indexOf("http:") == -1 || user.getHead().indexOf("https:") == -1){
+				//判断头像是绝对路径还是相对路径的
+				if(user.getHead().indexOf("http:") == 0 || user.getHead().indexOf("https:") == 0 || user.getHead().indexOf("//") == 0){
+					//如果发现头像是绝对路径，直接将其赋予head，原样返回
+					head = user.getHead();
+				}else{
+					//是相对路径，那就要增加前缀了
 					if(user.getHead().equals("default.png")){
 						head = defaultHead;
 					}else{
 						head = AttachmentFile.netUrl() + Global.get("USER_HEAD_PATH") + user.getHead();
 					}
-				}else{
-					head = user.getHead();
 				}
 			}else{
 				head = defaultHead;
@@ -898,6 +901,7 @@ public class UserServiceImpl implements UserService{
 		
 		return head;
 	}
+	
 	
 	
 	public String generateMd5Password(String originalPassword, String salt){
